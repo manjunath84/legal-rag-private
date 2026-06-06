@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Local config
+.env
+
+# Vector store (rebuild with scripts/ingest_corpus.py)
+.chroma/
+
+# Private corpora — only the synthetic samples are committed.
+# Drop real/sensitive documents here and they stay local:
+data/private/
+
+.DS_Store

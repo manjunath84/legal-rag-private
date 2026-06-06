@@ -1,0 +1,132 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram name="Architecture (Stage 1)" id="legal-rag-arch">
+    <mxGraphModel dx="1422" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="980" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Private Legal RAG — Architecture (Stage 1)&#10;Fully on-device · no query or document data leaves the machine" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="900" height="48" as="geometry" />
+        </mxCell>
+
+        <!-- User (outside the privacy boundary) -->
+        <mxCell id="user" value="👤 User&#10;(lawyer / analyst)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="430" width="120" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Privacy boundary -->
+        <mxCell id="boundary" value="🔒 ON-DEVICE (your laptop) — nothing leaves the machine; models were a one-time download" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 6;fillColor=none;strokeColor=#2d6a2d;verticalAlign=top;fontStyle=1;fontSize=12;fontColor=#2d6a2d;align=center;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="80" width="1020" height="860" as="geometry" />
+        </mxCell>
+
+        <!-- Streamlit UI -->
+        <mxCell id="ui" value="Streamlit UI · app.py&#10;(thin view — the ONLY file with st.*)&#10;Modes: Chat · Simple RAG · +Memory · CRAG · HyDE (A/B)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="105" width="470" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- INGESTION band -->
+        <mxCell id="inglabel" value="① INGESTION  (build the index — offline)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;fontSize=13;fontColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="230" y="210" width="420" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="docs" value="data/legal/&#10;.pdf · .txt · .md&#10;(synthetic samples)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="230" y="245" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ingest" value="ingest.py&#10;load → per-page text&#10;(pypdf)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="410" y="245" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="chunk" value="chunk.py&#10;char windows + overlap&#10;(carry source, page)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="590" y="245" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="embed1" value="embed.py&#10;sentence-transformers&#10;(local, in-process)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="780" y="245" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="chroma" value="Chroma&#10;persistent vector DB&#10;(.chroma/)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="980" y="240" width="150" height="95" as="geometry" />
+        </mxCell>
+
+        <!-- QUERY band -->
+        <mxCell id="qlabel" value="② QUERY  (runtime)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;fontSize=13;fontColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="230" y="375" width="420" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="question" value="User question&#10;(from UI)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="230" y="410" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="condense" value="memory.py&#10;condense follow-up&#10;→ standalone Q&#10;(+Memory mode)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="410" y="410" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="embedq" value="embed.py&#10;embed query&#10;(same model)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="600" y="410" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="retrieve" value="retrieve.py&#10;Chroma top-k&#10;(cosine)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="780" y="410" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- CRAG band -->
+        <mxCell id="craglabel" value="③ CORRECTIVE RAG  (LangGraph state machine — crag.py)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;fontSize=13;fontColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="230" y="535" width="600" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="grade" value="grade node&#10;yes/no per chunk&#10;(hand-parsed —&#10;NOT structured output)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="380" y="570" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="decision" value="any chunk&#10;relevant?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="610" y="580" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="generate" value="generate node&#10;answer + [source, p.N]&#10;citations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="790" y="540" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="abstain" value="abstain node&#10;&quot;I don't know — not in&#10;the provided documents&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="790" y="650" width="180" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Local LLM -->
+        <mxCell id="llm" value="llm.py — openai SDK (base_url)&#10;▼&#10;mlx_vlm.server  :8085&#10;Gemma-4-12B-it-4bit  (local, OpenAI-compatible)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="410" y="800" width="360" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 2+ ghost box -->
+        <mxCell id="stage2" value="Stage 2+ (future)&#10;&#10;• Docling / unstructured parsing&#10;  (tables, layout, OCR)&#10;• Hybrid search (BM25 + vector)&#10;• Reranker model&#10;• Financial / medical corpora&#10;• Hugging Face Space hosting" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;strokeColor=#999999;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="540" width="200" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- Embedding note -->
+        <mxCell id="embnote" value="sentence-transformers model is loaded once and cached;&#10;shared by both the ingestion and query embed steps." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#666666;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="230" y="745" width="360" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ===== EDGES ===== -->
+        <!-- Ingestion flow -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="docs" target="ingest"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="ingest" target="chunk"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="chunk" target="embed1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" value="upsert vectors" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#82b366;fontSize=10;" edge="1" parent="1" source="embed1" target="chroma"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- UI -> question -->
+        <mxCell id="e5" value="asks" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;dashed=1;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1" source="ui" target="question"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="euser" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;startArrow=block;dashed=1;strokeColor=#333333;" edge="1" parent="1" source="user" target="ui"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Query flow -->
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#d79b00;" edge="1" parent="1" source="question" target="condense"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#d79b00;" edge="1" parent="1" source="condense" target="embedq"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#d79b00;" edge="1" parent="1" source="embedq" target="retrieve"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e9" value="top-k query" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;dashed=1;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="retrieve" target="chroma"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- CRAG flow -->
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#d6b656;" edge="1" parent="1" source="retrieve" target="grade"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#d6b656;" edge="1" parent="1" source="grade" target="decision"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e12" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#2d6a2d;fontStyle=1;fontSize=11;" edge="1" parent="1" source="decision" target="generate"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e13" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#b85450;fontStyle=1;fontSize=11;" edge="1" parent="1" source="decision" target="abstain"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Answers back to UI -->
+        <mxCell id="e14" value="answer + citations" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;dashed=1;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1" source="generate" target="ui"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e15" value="abstention" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;dashed=1;strokeColor=#b85450;fontSize=10;" edge="1" parent="1" source="abstain" target="ui"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- LLM "uses" edges -->
+        <mxCell id="e16" value="calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;dashed=1;strokeColor=#b85450;fontSize=10;" edge="1" parent="1" source="condense" target="llm"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e17" value="calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;dashed=1;strokeColor=#b85450;fontSize=10;" edge="1" parent="1" source="grade" target="llm"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e18" value="calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;dashed=1;strokeColor=#b85450;fontSize=10;" edge="1" parent="1" source="generate" target="llm"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

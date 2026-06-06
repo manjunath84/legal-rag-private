@@ -1,0 +1,34 @@
+# Eval / demo set for the sample legal corpus.
+# answerable: any() of `expect` substrings (case-insensitive) must appear in the answer.
+# unanswerable: the answer must abstain (CRAG should grade 0 chunks relevant).
+- question: What is the governing law of the mutual NDA?
+  answerable: true
+  expect: ["Delaware"]
+- question: How long is the term of the mutual NDA?
+  answerable: true
+  expect: ["three", "3 year"]
+- question: How much notice is required to terminate the NDA?
+  answerable: true
+  expect: ["thirty", "30 day"]
+- question: Within how many days must the client pay invoices under the master services agreement?
+  answerable: true
+  expect: ["forty-five", "45 day"]
+- question: What is the cap on each party's liability in the master services agreement?
+  answerable: true
+  expect: ["twelve", "12 month"]
+- question: Which state's law governs the master services agreement?
+  answerable: true
+  expect: ["New York"]
+- question: In Altman v. Brightwave, how did the court rule?
+  answerable: true
+  expect: ["revers", "employee"]
+- question: What test did the court apply in the Altman opinion?
+  answerable: true
+  expect: ["ABC test"]
+# --- Unanswerable: not present in any document. CRAG must abstain, not invent. ---
+- question: What is the penalty for late delivery of physical goods under the NDA?
+  answerable: false
+  expect: []
+- question: What is Northwind Analytics' annual revenue?
+  answerable: false
+  expect: []
