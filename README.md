@@ -59,15 +59,20 @@ uv run python eval/run_eval.py    # 10 legal Q&A incl. 2 unanswerable → CRAG m
 
 ## Architecture
 
+![Architecture diagram](docs/architecture.png)
+
+> *Open [`docs/architecture.drawio`](docs/architecture.drawio) in [diagrams.net](https://app.diagrams.net/) or the draw.io VS Code extension to edit.*
+
 Pure core / thin view (same discipline as the Week-1 project): **all logic in `src/raglab/`** (unit-tested,
 no Streamlit), Streamlit only in `app.py`. This is what lets the core be *lifted* into later stages.
 
-```
-ingest → chunk → embed (sentence-transformers) → Chroma           # data layer (raw, transparent)
-              query → retrieve → [grade → branch] → answer          # CRAG via LangGraph state machine
-```
+Three layers (colour-coded in the diagram):
+- **① Ingestion** (green, offline) — `ingest → chunk → embed → Chroma`
+- **② Query** (orange, runtime) — `embed query → retrieve top-k`
+- **③ CRAG** (yellow/red, LangGraph state machine) — `grade each chunk → generate | abstain`
 
-- `llm.py` — `openai` SDK pointed at the local endpoint (the Week-1 `base_url` trick, pointed local).
+Key files:
+- `llm.py` — `openai` SDK pointed at the local endpoint (`base_url=http://localhost:8085/v1`)
 - `crag.py` — **LangGraph** graph: `retrieve → grade → (generate | abstain)`. Chosen because CRAG *is*
   a state machine, and it's the same substrate Week 3 (Agentic) will reuse.
 
