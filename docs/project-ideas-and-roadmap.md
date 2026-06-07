@@ -119,10 +119,28 @@ The cohort reads/builds in order; this engine is designed to be lifted forward:
 
 ---
 
-## 8. Next steps
+## 8. Stage 2a findings — hybrid search (built)
 
-- [ ] `git init` + first clean commit (repo isn't under version control yet)
-- [ ] (Stage 2) swap `pypdf` → Docling/unstructured for table/layout parsing
-- [ ] (Stage 2) add hybrid search (BM25 + vector) + a local reranker
+Added BM25 + dense vectors fused with **Reciprocal Rank Fusion** (`src/raglab/hybrid.py`), wired behind
+`settings.retrieval_mode` so every mode benefits. But the more valuable output was **how we measured it**:
+
+- **Methodology fix:** comparing retrievers *through* CRAG conflated retrieval with the local model's
+  flaky temp-0 grading (a one-off "failure" vanished on re-runs). So retrieval is now evaluated
+  **deterministically, with no LLM** — does the gold chunk land in top-k? (`scripts/compare_retrieval.py`)
+- **Honest result:** on this 9-chunk corpus the methods **tie** (recall@5 = 8/8 for vector, BM25, and
+  hybrid). Hybrid is not a free win. Its value is *per-query*: it reliably fixes the exact-keyword
+  "term" miss, at the cost of keyword cross-talk between similar clauses (the two governing-law sections).
+- **Gold-marker validation caught a real bug:** the marker "State of Delaware" wasn't intact in any chunk —
+  **char-window chunking split the governing-law clause across two chunks.** → motivates section-aware
+  chunking (possibly a bigger lever than fusion here).
+- **Lesson logged:** separate *retrieval* eval (deterministic) from *end-to-end* eval (LLM, nondeterministic
+  9–10/10). Clean bridge to Week 5 (Evals & Observability).
+
+## 9. Next steps
+
+- [x] `git init` + first commit; pushed to GitHub (manjunath84/legal-rag-private), topics + diagram
+- [x] (Stage 2a) hybrid search (BM25 + vector, RRF) + deterministic retrieval-recall eval
+- [ ] (Stage 2b) **reranker** (cross-encoder) to fix keyword cross-talk + **section-aware chunking**
+- [ ] (Stage 2c) swap `pypdf` → Docling/unstructured for table/layout parsing (needs a complex PDF corpus)
 - [ ] (Stage 3) add a financial corpus (SEC EDGAR 10-Ks) and a hosted-model adapter
 - [ ] (Stage 4) deploy a Hugging Face Space on synthetic docs + portfolio writeup

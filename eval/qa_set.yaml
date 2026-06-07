@@ -1,30 +1,49 @@
 # Eval / demo set for the sample legal corpus.
-# answerable: any() of `expect` substrings (case-insensitive) must appear in the answer.
-# unanswerable: the answer must abstain (CRAG should grade 0 chunks relevant).
+#
+# Two evals use this file:
+#   - eval/run_eval.py         (end-to-end, through CRAG): `expect` substrings must
+#                              appear in the answer; unanswerable must abstain.
+#   - scripts/compare_retrieval.py (deterministic retrieval recall@k, NO LLM):
+#                              the `gold` substring must appear in a retrieved chunk.
+#
+# `gold` is a substring that UNIQUELY identifies the correct chunk (so a coincidental
+# match in the wrong document doesn't count as a hit).
 - question: What is the governing law of the mutual NDA?
   answerable: true
   expect: ["Delaware"]
+  # NOTE: char-window chunking split "...laws of the State of | Delaware...", so
+  # "State of Delaware" is not intact in any chunk. "New Castle County" is the
+  # unique, intact marker for the NDA governing-law/jurisdiction clause.
+  # (This fragmentation motivates section-aware chunking — see roadmap.)
+  gold: "New Castle County"
 - question: How long is the term of the mutual NDA?
   answerable: true
   expect: ["three", "3 year"]
+  gold: "continues for three (3) years"
 - question: How much notice is required to terminate the NDA?
   answerable: true
   expect: ["thirty", "30 day"]
+  gold: "thirty (30) days"
 - question: Within how many days must the client pay invoices under the master services agreement?
   answerable: true
   expect: ["forty-five", "45 day"]
+  gold: "forty-five (45) days"
 - question: What is the cap on each party's liability in the master services agreement?
   answerable: true
   expect: ["twelve", "12 month"]
+  gold: "twelve (12) months"
 - question: Which state's law governs the master services agreement?
   answerable: true
   expect: ["New York"]
+  gold: "State of New York"
 - question: In Altman v. Brightwave, how did the court rule?
   answerable: true
   expect: ["revers", "employee"]
+  gold: "prong B"
 - question: What test did the court apply in the Altman opinion?
   answerable: true
   expect: ["ABC test"]
+  gold: "ABC test"
 # --- Unanswerable: not present in any document. CRAG must abstain, not invent. ---
 - question: What is the penalty for late delivery of physical goods under the NDA?
   answerable: false

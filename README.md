@@ -53,8 +53,9 @@ Quality gates & eval:
 
 ```bash
 uv run ruff check .
-uv run pytest -q                  # 10 unit tests (pure core, no model needed)
-uv run python eval/run_eval.py    # 10 legal Q&A incl. 2 unanswerable → CRAG must abstain
+uv run pytest -q                       # 14 unit tests (pure core, no model needed)
+uv run python eval/run_eval.py         # end-to-end: 10 legal Q&A incl. 2 unanswerable → CRAG abstains
+uv run python scripts/compare_retrieval.py 4   # deterministic recall@k: vector vs BM25 vs hybrid
 ```
 
 ## Architecture
@@ -68,7 +69,7 @@ no Streamlit), Streamlit only in `app.py`. This is what lets the core be *lifted
 
 Three layers (colour-coded in the diagram):
 - **① Ingestion** (green, offline) — `ingest → chunk → embed → Chroma`
-- **② Query** (orange, runtime) — `embed query → retrieve top-k`
+- **② Query** (orange, runtime) — **hybrid retrieval**: `BM25 + dense vectors → RRF fusion → top-k`
 - **③ CRAG** (yellow/red, LangGraph state machine) — `grade each chunk → generate | abstain`
 
 Key files:
@@ -91,20 +92,47 @@ on OpenAI **function-calling**. `scripts/spike_endpoint.py` verifies the local s
 So the grader is a **plain yes/no prompt, parsed by hand** (`parse_grade`). LangGraph still earns its
 place — for the branch/state machine, not for structured output.
 
-## A measured retrieval limitation (and the Stage-2 fix)
+## Retrieval: hybrid search + a rigorous eval (Stage 2)
 
-The eval harness caught a real failure: *"How long is the term of the NDA?"* The answer chunk ranked **#5**
-under pure semantic search (distance 0.375 vs. the #4 cutoff at 0.372 — essentially tied), because the
-keyword **"term"** doesn't embed strongly. Raising `top_k` to 5 surfaces it for this corpus, but the honest
-fix is **hybrid search (BM25 + vector)** — keyword search nails exact legal terms. That's a **Stage 2**
-item, motivated by measured evidence, not guesswork.
+Stage 1 measured a real failure: the NDA **term** clause ranked #5 under pure semantic search (the
+keyword "term" doesn't embed strongly), so at `top_k=4` CRAG abstained. Stage 2 adds **hybrid
+retrieval** — BM25 keyword search fused with dense vectors via **Reciprocal Rank Fusion**
+(`src/raglab/hybrid.py`) — and, just as importantly, **a rigorous way to measure whether it helps**.
+
+**Methodology (the part that matters).** Comparing retrievers *through* CRAG conflates retrieval
+quality with the local model's flaky, nondeterministic grading. So retrieval is evaluated
+**deterministically, with no LLM**: does the gold chunk — a unique substring per question, *validated
+to exist intact in exactly one chunk* — land in the top-k? See `scripts/compare_retrieval.py`.
+
+**Honest result** — recall@k over the 8 answerable questions:
+
+| `top_k` | vector | BM25 | hybrid |
+|---|---|---|---|
+| 4 | 7/8 | 7/8 | 7/8 |
+| 5 | 8/8 | 8/8 | 8/8 |
+
+On this small corpus the methods **tie** on aggregate recall — hybrid is *not* a free win, and the repo
+says so. Its value is **per-query and directional**: it reliably fixes the exact-keyword "term" miss
+(vector ❌ → hybrid ✅ at `top_k=4`), at the cost of occasional **keyword cross-talk** between similar
+clauses across documents (e.g. the two governing-law sections). That trade-off is exactly what a
+**reranker** resolves — the next Stage-2 lever. Hybrid ships as the **default** because the production
+target (large, keyword-heavy legal corpora) is where it pays off.
+
+**A second finding the eval surfaced:** character-window chunking *split the NDA governing-law clause
+across two chunks* — motivating **section-aware chunking**, plausibly a bigger lever than fusion on
+documents like these.
+
+**End-to-end eval** (`eval/run_eval.py`, through CRAG) is typically **10/10**, but the temp-0 grader is
+nondeterministic — expect **9–10/10** run to run. (Honest range over a single cherry-picked number.)
 
 ## Roadmap (this repo is Stage 1 of a portfolio piece)
 
 | Stage | Deliverable |
 |---|---|
-| **1 — here** | Private local RAG engine (Simple → Memory → CRAG, HyDE bonus) over sample legal docs, eval harness |
-| 2 | **Enterprise document parsing** (Docling / unstructured — tables, layout, OCR) + **hybrid search/rerank** |
+| **1** ✅ | Private local RAG engine (Simple → Memory → CRAG, HyDE bonus) over sample legal docs, eval harness |
+| **2a** ✅ | **Hybrid search** (BM25 + vector, RRF) + a **deterministic retrieval-recall eval** harness |
+| 2b — next | **Reranker** (cross-encoder) to fix keyword cross-talk + **section-aware chunking** |
+| 2c — next | **Enterprise parsing** (Docling / unstructured — tables, layout, OCR) once a complex PDF corpus is added |
 | 3 | Generalize the core to **financial** (SEC filings) and **medical**; hosted-model adapter |
 | 4 | Public **Hugging Face Space** demo (synthetic docs) + polished portfolio writeup |
 

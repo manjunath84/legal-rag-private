@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     chunk_size: int = 1000  # characters
     chunk_overlap: int = 150
     top_k: int = 5
+    # "hybrid" = BM25 + vector fused with RRF (default); "vector" = dense only.
+    retrieval_mode: str = "hybrid"  # env: RAGLAB_RETRIEVAL_MODE
+    candidate_k: int = 10  # how many each retriever contributes before fusion
+    rrf_k: int = 60  # Reciprocal Rank Fusion constant (standard default)
 
     # --- Storage paths ---
     data_dir: Path = Path("data/legal")

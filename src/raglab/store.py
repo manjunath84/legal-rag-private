@@ -40,6 +40,20 @@ def count(cfg: Settings = settings) -> int:
     return get_collection(cfg).count()
 
 
+def all_chunks(cfg: Settings = settings) -> list[Chunk]:
+    """Return every stored chunk (used to build the BM25 keyword index)."""
+    col = get_collection(cfg)
+    res = col.get(include=["documents", "metadatas"])
+    out: list[Chunk] = []
+    for cid, text, meta in zip(res["ids"], res["documents"], res["metadatas"], strict=True):
+        page = meta.get("page", -1)
+        out.append(Chunk(
+            id=cid, text=text, source=meta.get("source", "?"),
+            page=None if page == -1 else int(page),
+        ))
+    return out
+
+
 def reset(cfg: Settings = settings) -> None:
     client = chromadb.PersistentClient(path=str(cfg.chroma_dir))
     try:
