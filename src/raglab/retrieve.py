@@ -29,13 +29,25 @@ def vector_search(query_text: str, cfg: Settings = settings, k: int | None = Non
 
 def retrieve(query_text: str, cfg: Settings = settings, k: int | None = None
              ) -> list[tuple[Chunk, float]]:
-    """Mode-aware retrieval. Returns up to k (Chunk, score) pairs, best first."""
-    if cfg.retrieval_mode == "hybrid":
-        # Local import avoids a circular dependency (hybrid imports vector_search).
-        from raglab.hybrid import hybrid_search
+    """Mode-aware retrieval with optional cross-encoder reranking.
 
-        return hybrid_search(query_text, cfg, k)
-    return vector_search(query_text, cfg, k)
+    When rerank_enabled, fetches candidate_k candidates first, then the
+    cross-encoder re-sorts them and returns the top effective_k.
+    """
+    effective_k = k or cfg.top_k
+    fetch_k = cfg.candidate_k if cfg.rerank_enabled else effective_k
+
+    if cfg.retrieval_mode == "hybrid":
+        from raglab.hybrid import hybrid_search
+        hits = hybrid_search(query_text, cfg, fetch_k)
+    else:
+        hits = vector_search(query_text, cfg, fetch_k)
+
+    if cfg.rerank_enabled:
+        from raglab.rerank import rerank
+        hits = rerank(query_text, hits, effective_k)
+
+    return hits
 
 
 def format_context(hits: list[tuple[Chunk, float]]) -> str:

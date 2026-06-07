@@ -34,7 +34,8 @@ def main() -> int:
         print(f"Reset collection '{settings.collection}'.")
 
     docs = load_dir(directory)
-    chunks = chunk_documents(docs, settings.chunk_size, settings.chunk_overlap)
+    chunks = chunk_documents(docs, settings.chunk_size, settings.chunk_overlap,
+                             settings.chunk_strategy)
     if not chunks:
         print(f"No text extracted from {directory}.")
         return 1
