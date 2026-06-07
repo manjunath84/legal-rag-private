@@ -136,11 +136,40 @@ Added BM25 + dense vectors fused with **Reciprocal Rank Fusion** (`src/raglab/hy
 - **Lesson logged:** separate *retrieval* eval (deterministic) from *end-to-end* eval (LLM, nondeterministic
   9–10/10). Clean bridge to Week 5 (Evals & Observability).
 
-## 9. Next steps
+## 9. Stage 2b findings — reranker + section-aware chunking (built)
+
+Two targeted fixes for two measured Stage 2a weaknesses.
+
+**Fix 1 — Section-aware chunking** (`src/raglab/chunk.py`): detect section boundaries
+(numbered headings `6. GOVERNING LAW`, markdown `## Header`) before applying size limits.
+Corpus goes from 9 char-window chunks → 21 section chunks. The NDA governing-law clause
+("State of Delaware") that was split across two chunks in Stage 2a is now intact in a
+single 288-char section chunk. Gold marker changed back to `"State of Delaware"` in
+`eval/qa_set.yaml`; passes at k=5.
+
+**Fix 2 — Cross-encoder reranker** (`src/raglab/rerank.py`): after hybrid retrieval
+fetches `candidate_k=10` candidates, `cross-encoder/ms-marco-MiniLM-L-6-v2` re-scores
+each (query, chunk) pair and returns the best `top_k=5`. At k=1, the NDA governing-law
+question goes from rank-2 (MSA governing-law chunk at rank-1, cross-talk) → rank-1
+(correct NDA chunk). Model is ~85 MB, loaded once and cached.
+
+**Attribution (measured at k=1):**
+- Baseline (char chunking, no rerank): VEC 4/8, BM25 2/8, HYB 4/8
+- Stage 2b (section chunking + rerank): RERANK 4/8 (cross-talk fixed; preamble over-ranking
+  is a known cross-encoder limitation when document titles repeat query terms)
+
+**Config flags for A/B:** `RAGLAB_CHUNK_STRATEGY=char`, `RAGLAB_RERANK_ENABLED=false`.
+
+**Lesson logged:** cross-encoders trained on MS MARCO web search over-weight exact term
+matches in document preambles (MSA title section ranks #1 for any "master services
+agreement" query at k=1). This is acceptable at k=5 (all gold chunks present), and the
+NDA cross-talk fix is the primary motivation. Flag as a known limitation in the writeup.
+
+## 10. Next steps
 
 - [x] `git init` + first commit; pushed to GitHub (manjunath84/legal-rag-private), topics + diagram
 - [x] (Stage 2a) hybrid search (BM25 + vector, RRF) + deterministic retrieval-recall eval
-- [ ] (Stage 2b) **reranker** (cross-encoder) to fix keyword cross-talk + **section-aware chunking**
+- [x] (Stage 2b) reranker (cross-encoder) + section-aware chunking + updated eval
 - [ ] (Stage 2c) swap `pypdf` → Docling/unstructured for table/layout parsing (needs a complex PDF corpus)
 - [ ] (Stage 3) add a financial corpus (SEC EDGAR 10-Ks) and a hosted-model adapter
 - [ ] (Stage 4) deploy a Hugging Face Space on synthetic docs + portfolio writeup

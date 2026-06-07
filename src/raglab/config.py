@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     retrieval_mode: str = "hybrid"  # env: RAGLAB_RETRIEVAL_MODE
     candidate_k: int = 10  # how many each retriever contributes before fusion
     rrf_k: int = 60  # Reciprocal Rank Fusion constant (standard default)
+    rerank_enabled: bool = True  # cross-encoder rerank after retrieval
+    chunk_strategy: str = "section"  # "section" | "char"
 
     # --- Storage paths ---
     data_dir: Path = Path("data/legal")

@@ -11,11 +11,10 @@
 - question: What is the governing law of the mutual NDA?
   answerable: true
   expect: ["Delaware"]
-  # NOTE: char-window chunking split "...laws of the State of | Delaware...", so
-  # "State of Delaware" is not intact in any chunk. "New Castle County" is the
-  # unique, intact marker for the NDA governing-law/jurisdiction clause.
-  # (This fragmentation motivates section-aware chunking — see roadmap.)
-  gold: "New Castle County"
+  # Gold restored to the primary phrase after section-aware chunking (Stage 2b)
+  # keeps "6. GOVERNING LAW" whole. Under char-window chunking this split across
+  # two chunks and was unretrievable; now it appears intact in a single chunk.
+  gold: "State of Delaware"
 - question: How long is the term of the mutual NDA?
   answerable: true
   expect: ["three", "3 year"]
