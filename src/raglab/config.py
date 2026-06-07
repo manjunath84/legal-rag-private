@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     retrieval_mode: str = "hybrid"  # env: RAGLAB_RETRIEVAL_MODE
     candidate_k: int = 10  # how many each retriever contributes before fusion
     rrf_k: int = 60  # Reciprocal Rank Fusion constant (standard default)
+    # Stage 2b defaults — both on. Upgrading without re-ingesting is safe
+    # (rerank works on any existing index) but will trigger a one-time ~85 MB
+    # cross-encoder download on first query. Set RAGLAB_RERANK_ENABLED=false
+    # or RAGLAB_CHUNK_STRATEGY=char for A/B comparison.
     rerank_enabled: bool = True  # cross-encoder rerank after retrieval
     chunk_strategy: str = "section"  # "section" | "char"
 

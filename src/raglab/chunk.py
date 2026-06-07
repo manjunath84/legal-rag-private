@@ -25,7 +25,12 @@ from raglab.ingest import Document
 #   "6. GOVERNING LAW."  (numbered + ALLCAPS — NDA style)
 #   "## 7. Governing Law" / "## Background"  (markdown — MSA / opinion style)
 #   "# MASTER SERVICES AGREEMENT"  (top-level markdown title)
-_HEADER_RE = re.compile(r"(?m)^(?:\d+\.\s+[A-Z]|#{1,3}\s+\S)")
+#
+# Requires [A-Z]{2,} (at least two consecutive uppercase letters) for the
+# numbered pattern so "1. The party shall..." (sentence-case sub-items) does
+# NOT trigger a spurious boundary. Scoped to the 3-document sample corpus;
+# extend the pattern if you add docs with different heading styles.
+_HEADER_RE = re.compile(r"(?m)^(?:\d+\.\s+[A-Z]{2,}|#{1,3}\s+\S)")
 
 
 @dataclass

@@ -143,9 +143,10 @@ Two targeted fixes for two measured Stage 2a weaknesses.
 **Fix 1 — Section-aware chunking** (`src/raglab/chunk.py`): detect section boundaries
 (numbered headings `6. GOVERNING LAW`, markdown `## Header`) before applying size limits.
 Corpus goes from 9 char-window chunks → 21 section chunks. The NDA governing-law clause
-("State of Delaware") that was split across two chunks in Stage 2a is now intact in a
-single 288-char section chunk. Gold marker changed back to `"State of Delaware"` in
-`eval/qa_set.yaml`; passes at k=5.
+is now a single 288-char section chunk (previously split mid-phrase across two chunks).
+The text still contains a hard line wrap (`"State of\nDelaware"`); `compare_retrieval.py`
+uses whitespace-normalised substring matching so the gold marker `"State of Delaware"`
+matches. Gold marker changed back in `eval/qa_set.yaml`; passes at k=5.
 
 **Fix 2 — Cross-encoder reranker** (`src/raglab/rerank.py`): after hybrid retrieval
 fetches `candidate_k=10` candidates, `cross-encoder/ms-marco-MiniLM-L-6-v2` re-scores

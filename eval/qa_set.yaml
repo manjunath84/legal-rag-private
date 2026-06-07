@@ -11,9 +11,11 @@
 - question: What is the governing law of the mutual NDA?
   answerable: true
   expect: ["Delaware"]
-  # Gold restored to the primary phrase after section-aware chunking (Stage 2b)
-  # keeps "6. GOVERNING LAW" whole. Under char-window chunking this split across
-  # two chunks and was unretrievable; now it appears intact in a single chunk.
+  # Section-aware chunking (Stage 2b) keeps "6. GOVERNING LAW" whole — the
+  # entire clause is now a single chunk. The text still has a hard line wrap
+  # ("State of\nDelaware"), so compare_retrieval.py uses whitespace-normalised
+  # matching to find this marker. Under char-window chunking the clause was
+  # split across two chunks and was unretrievable regardless of normalisation.
   gold: "State of Delaware"
 - question: How long is the term of the mutual NDA?
   answerable: true
